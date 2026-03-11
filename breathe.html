@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breathe</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a1a;
+            color: #e8e8f0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        /* Ambient background */
+        .ambient {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .ambient::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: ambientPulse 10s ease-in-out infinite;
+        }
+
+        .ambient::after {
+            content: '';
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: ambientPulse 14s ease-in-out infinite reverse;
+        }
+
+        @keyframes ambientPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.7; }
+        }
+
+        /* Stars */
+        .stars {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: twinkle var(--duration) ease-in-out infinite;
+            animation-delay: var(--delay);
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Floating particles */
+        .particles {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: var(--size);
+            height: var(--size);
+            background: radial-gradient(circle, var(--color) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: floatUp var(--float-duration) ease-in-out infinite;
+            animation-delay: var(--float-delay);
+            opacity: 0;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0); opacity: 0; }
+            15% { opacity: 0.6; }
+            85% { opacity: 0.6; }
+            100% { transform: translateY(-200px) scale(1); opacity: 0; }
+        }
+
+        /* Main container */
+        .container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 48px;
+        }
+
+        /* Welcome screen */
+        .welcome {
+            text-align: center;
+            animation: fadeIn 2s ease-out;
+        }
+
+        .welcome h1 {
+            font-size: 42px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #e8e8f0 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome p {
+            font-size: 18px;
+            font-weight: 300;
+            color: rgba(232, 232, 240, 0.5);
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .start-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 40px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 60px;
+            color: #a5b4fc;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .start-btn:hover {
+            background: rgba(99, 102, 241, 0.25);
+            border-color: rgba(99, 102, 241, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.2);
+        }
+
+        .start-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Breathing screen */
+        .breathing-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 48px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .breathing-screen.active {
+            display: flex;
+        }
+
+        /* Breath circle */
+        .breath-wrapper {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .breath-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.6), rgba(99, 102, 241, 0.3));
+            transition: all 5s cubic-bezier(0.25, 0, 0.25, 1);
+            box-shadow:
+                0 0 60px rgba(99, 102, 241, 0.15),
+                inset 0 0 30px rgba(255, 255, 255, 0.05);
+            position: relative;
+            z-index: 2;
+        }
+
+        .breath-circle.inhale {
+            width: 240px;
+            height: 240px;
+            background: radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.85), rgba(99, 102, 241, 0.5));
+            box-shadow:
+                0 0 120px rgba(99, 102, 241, 0.3),
+                0 0 240px rgba(139, 92, 246, 0.12),
+                inset 0 0 60px rgba(255, 255, 255, 0.08);
+        }
+
+        .breath-circle.hold {
+            width: 240px;
+            height: 240px;
+            background: radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.85), rgba(99, 102, 241, 0.5));
+            box-shadow:
+                0 0 120px rgba(99, 102, 241, 0.3),
+                0 0 240px rgba(139, 92, 246, 0.12),
+                inset 0 0 60px rgba(255, 255, 255, 0.08);
+            transition: all 0.5s ease;
+        }
+
+        .breath-circle.exhale {
+            width: 100px;
+            height: 100px;
+            transition: all 7s cubic-bezier(0.25, 0, 0.25, 1);
+        }
+
+        /* Ripple rings */
+        .ripple-container {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(99, 102, 241, 0);
+            width: 100px;
+            height: 100px;
+            transition: all 5s cubic-bezier(0.25, 0, 0.25, 1);
+            opacity: 0;
+        }
+
+        .ripple.inhale {
+            opacity: 1;
+        }
+
+        .ripple-1.inhale {
+            width: 270px;
+            height: 270px;
+            border-color: rgba(99, 102, 241, 0.15);
+        }
+
+        .ripple-2.inhale {
+            width: 295px;
+            height: 295px;
+            border-color: rgba(139, 92, 246, 0.08);
+            transition-delay: 0.15s;
+        }
+
+        .ripple-3.inhale {
+            width: 320px;
+            height: 320px;
+            border-color: rgba(167, 139, 250, 0.04);
+            transition-delay: 0.3s;
+        }
+
+        .ripple.hold {
+            opacity: 1;
+            transition: all 0.5s ease;
+        }
+
+        .ripple-1.hold {
+            width: 270px;
+            height: 270px;
+            border-color: rgba(99, 102, 241, 0.15);
+        }
+
+        .ripple-2.hold {
+            width: 295px;
+            height: 295px;
+            border-color: rgba(139, 92, 246, 0.08);
+        }
+
+        .ripple-3.hold {
+            width: 320px;
+            height: 320px;
+            border-color: rgba(167, 139, 250, 0.04);
+        }
+
+        .ripple.exhale {
+            width: 100px;
+            height: 100px;
+            border-color: rgba(99, 102, 241, 0);
+            opacity: 0;
+            transition: all 7s cubic-bezier(0.25, 0, 0.25, 1);
+        }
+
+        /* Glow pulse during hold */
+        .glow-pulse {
+            position: absolute;
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            background: transparent;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .glow-pulse.active {
+            opacity: 1;
+            animation: glowBeat 2s ease-in-out infinite;
+        }
+
+        @keyframes glowBeat {
+            0%, 100% { box-shadow: 0 0 60px rgba(139, 92, 246, 0.08); }
+            50% { box-shadow: 0 0 90px rgba(139, 92, 246, 0.18); }
+        }
+
+        /* Instruction text */
+        .instruction {
+            font-size: 22px;
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(165, 180, 252, 0.8);
+            min-height: 32px;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .instruction.fade {
+            opacity: 0;
+            transform: translateY(-4px);
+        }
+
+        /* Countdown timer */
+        .phase-timer {
+            font-size: 14px;
+            font-weight: 300;
+            color: rgba(232, 232, 240, 0.2);
+            letter-spacing: 2px;
+            min-height: 20px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Counter */
+        .counter {
+            font-size: 15px;
+            font-weight: 400;
+            color: rgba(232, 232, 240, 0.35);
+            letter-spacing: 1px;
+        }
+
+        /* Progress bar */
+        .progress-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            transition: all 0.6s ease;
+        }
+
+        .progress-dot.complete {
+            background: rgba(99, 102, 241, 0.6);
+            border-color: rgba(99, 102, 241, 0.8);
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .progress-dot.current {
+            background: rgba(139, 92, 246, 0.4);
+            border-color: rgba(139, 92, 246, 0.6);
+            animation: currentDot 2.5s ease-in-out infinite;
+        }
+
+        @keyframes currentDot {
+            0%, 100% { box-shadow: 0 0 8px rgba(139, 92, 246, 0.2); }
+            50% { box-shadow: 0 0 16px rgba(139, 92, 246, 0.4); }
+        }
+
+        /* Complete screen */
+        .complete-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            text-align: center;
+            animation: fadeIn 2s ease-out;
+        }
+
+        .complete-screen.active {
+            display: flex;
+        }
+
+        .complete-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.4), rgba(99, 102, 241, 0.15));
+            box-shadow: 0 0 80px rgba(99, 102, 241, 0.15);
+            margin-bottom: 8px;
+            animation: gentlePulse 4s ease-in-out infinite;
+        }
+
+        @keyframes gentlePulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+
+        .complete-screen h2 {
+            font-size: 36px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #e8e8f0 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .complete-screen p {
+            font-size: 17px;
+            font-weight: 300;
+            color: rgba(232, 232, 240, 0.45);
+            line-height: 1.7;
+            max-width: 340px;
+        }
+
+        .close-btn {
+            margin-top: 20px;
+            padding: 14px 36px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 60px;
+            color: rgba(165, 180, 252, 0.7);
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        /* Utility */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Time display */
+        .time-display {
+            position: fixed;
+            top: 24px;
+            right: 28px;
+            font-size: 13px;
+            font-weight: 400;
+            color: rgba(232, 232, 240, 0.2);
+            letter-spacing: 0.5px;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient"></div>
+    <div class="stars" id="stars"></div>
+    <div class="particles" id="particles"></div>
+    <div class="time-display" id="timeDisplay"></div>
+
+    <div class="container">
+        <!-- Welcome -->
+        <div class="welcome" id="welcomeScreen">
+            <h1>Time to Breathe</h1>
+            <p>10 deep breaths to reset your evening.<br>Just three minutes. You deserve this.</p>
+            <button class="start-btn" id="startBtn">
+                <span>Begin</span>
+            </button>
+        </div>
+
+        <!-- Breathing -->
+        <div class="breathing-screen" id="breathingScreen">
+            <div class="instruction" id="instruction">Get ready...</div>
+            <div class="breath-wrapper">
+                <div class="ripple-container">
+                    <div class="ripple ripple-1" id="ripple1"></div>
+                    <div class="ripple ripple-2" id="ripple2"></div>
+                    <div class="ripple ripple-3" id="ripple3"></div>
+                </div>
+                <div class="glow-pulse" id="glowPulse"></div>
+                <div class="breath-circle" id="breathCircle"></div>
+            </div>
+            <div class="phase-timer" id="phaseTimer"></div>
+            <div class="counter" id="counter">Breath 1 of 10</div>
+            <div class="progress-dots" id="progressDots"></div>
+        </div>
+
+        <!-- Complete -->
+        <div class="complete-screen" id="completeScreen">
+            <div class="complete-icon"></div>
+            <h2>Well done</h2>
+            <p>10 breaths complete. You showed up for yourself tonight. That matters.</p>
+            <button class="close-btn" id="closeBtn">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Stars
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 80; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.setProperty('--duration', (4 + Math.random() * 6) + 's');
+            star.style.setProperty('--delay', Math.random() * 8 + 's');
+            if (Math.random() > 0.7) {
+                star.style.width = '3px';
+                star.style.height = '3px';
+                star.style.background = 'rgba(165, 180, 252, 0.25)';
+            }
+            starsContainer.appendChild(star);
+        }
+
+        // Floating particles
+        const particlesContainer = document.getElementById('particles');
+        function spawnParticles() {
+            for (let i = 0; i < 12; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const size = 4 + Math.random() * 8;
+                p.style.setProperty('--size', size + 'px');
+                p.style.left = (30 + Math.random() * 40) + '%';
+                p.style.top = (50 + Math.random() * 30) + '%';
+                p.style.setProperty('--float-duration', (8 + Math.random() * 10) + 's');
+                p.style.setProperty('--float-delay', Math.random() * 12 + 's');
+                const colors = [
+                    'rgba(99, 102, 241, 0.4)',
+                    'rgba(139, 92, 246, 0.3)',
+                    'rgba(167, 139, 250, 0.3)',
+                    'rgba(196, 181, 253, 0.2)'
+                ];
+                p.style.setProperty('--color', colors[Math.floor(Math.random() * colors.length)]);
+                particlesContainer.appendChild(p);
+            }
+        }
+        spawnParticles();
+
+        // Time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('timeDisplay').textContent =
+                now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        }
+        updateTime();
+        setInterval(updateTime, 30000);
+
+        // Progress dots
+        const progressDots = document.getElementById('progressDots');
+        for (let i = 0; i < 10; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'progress-dot';
+            dot.dataset.index = i;
+            progressDots.appendChild(dot);
+        }
+
+        // Breathing timing — slower and more drawn out
+        const INHALE_MS = 5000;
+        const HOLD_MS = 4000;
+        const EXHALE_MS = 7000;
+        const PAUSE_MS = 1500;
+        const TOTAL_BREATHS = 10;
+        let currentBreath = 0;
+        let phaseInterval = null;
+
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const breathingScreen = document.getElementById('breathingScreen');
+        const completeScreen = document.getElementById('completeScreen');
+        const breathCircle = document.getElementById('breathCircle');
+        const instruction = document.getElementById('instruction');
+        const counter = document.getElementById('counter');
+        const phaseTimer = document.getElementById('phaseTimer');
+        const glowPulse = document.getElementById('glowPulse');
+        const ripple1 = document.getElementById('ripple1');
+        const ripple2 = document.getElementById('ripple2');
+        const ripple3 = document.getElementById('ripple3');
+        const ripples = [ripple1, ripple2, ripple3];
+
+        function setPhase(phase) {
+            breathCircle.className = 'breath-circle ' + phase;
+            ripples.forEach(r => r.className = r.className.replace(/ (inhale|hold|exhale)/g, '') + ' ' + phase);
+            glowPulse.classList.toggle('active', phase === 'hold');
+        }
+
+        function startPhaseTimer(durationMs) {
+            clearInterval(phaseInterval);
+            let remaining = Math.ceil(durationMs / 1000);
+            phaseTimer.textContent = remaining;
+            phaseInterval = setInterval(() => {
+                remaining--;
+                if (remaining > 0) {
+                    phaseTimer.textContent = remaining;
+                } else {
+                    phaseTimer.textContent = '';
+                    clearInterval(phaseInterval);
+                }
+            }, 1000);
+        }
+
+        function setInstruction(text) {
+            instruction.classList.add('fade');
+            setTimeout(() => {
+                instruction.textContent = text;
+                instruction.classList.remove('fade');
+            }, 300);
+        }
+
+        function updateProgress(breathIndex) {
+            document.querySelectorAll('.progress-dot').forEach((dot, i) => {
+                dot.className = 'progress-dot';
+                if (i < breathIndex) dot.classList.add('complete');
+                if (i === breathIndex) dot.classList.add('current');
+            });
+        }
+
+        function doBreath(index) {
+            if (index >= TOTAL_BREATHS) {
+                finishSession();
+                return;
+            }
+
+            currentBreath = index;
+            counter.textContent = `Breath ${index + 1} of ${TOTAL_BREATHS}`;
+            updateProgress(index);
+
+            // Inhale
+            setInstruction('Breathe in');
+            setPhase('inhale');
+            startPhaseTimer(INHALE_MS);
+
+            setTimeout(() => {
+                // Hold
+                setInstruction('Hold');
+                setPhase('hold');
+                startPhaseTimer(HOLD_MS);
+
+                setTimeout(() => {
+                    // Exhale
+                    setInstruction('Breathe out');
+                    setPhase('exhale');
+                    startPhaseTimer(EXHALE_MS);
+
+                    setTimeout(() => {
+                        // Brief pause between breaths
+                        phaseTimer.textContent = '';
+                        document.querySelectorAll('.progress-dot')[index].className = 'progress-dot complete';
+
+                        setTimeout(() => {
+                            doBreath(index + 1);
+                        }, PAUSE_MS);
+                    }, EXHALE_MS);
+                }, HOLD_MS);
+            }, INHALE_MS);
+        }
+
+        function finishSession() {
+            clearInterval(phaseInterval);
+            breathingScreen.classList.remove('active');
+            completeScreen.classList.add('active');
+        }
+
+        // Start
+        document.getElementById('startBtn').addEventListener('click', () => {
+            welcomeScreen.classList.add('hidden');
+            breathingScreen.classList.add('active');
+
+            instruction.textContent = 'Get ready...';
+            setTimeout(() => doBreath(0), 2500);
+        });
+
+        // Close
+        document.getElementById('closeBtn').addEventListener('click', () => {
+            window.close();
+            document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:rgba(232,232,240,0.3);font-family:Inter,sans-serif;font-weight:300;font-size:18px;background:#0a0a1a;">You can close this tab now.</div>';
+        });
+
+        // Keyboard shortcut - Space to start, Escape to close
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !welcomeScreen.classList.contains('hidden')) {
+                e.preventDefault();
+                document.getElementById('startBtn').click();
+            }
+            if (e.code === 'Escape') {
+                window.close();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+# macOS
+.DS_Store
+
+# Compiled binary (rebuild from source)
+Breathe.app/Contents/MacOS/Breathe
+
+*.o
+*.d
