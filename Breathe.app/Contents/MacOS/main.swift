@@ -17,7 +17,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         window = NSWindow(
             contentRect: windowRect,
-            styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
@@ -29,8 +29,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isMovableByWindowBackground = true
         window.level = .floating  // Stay on top
 
-        // WebView config
+        // WebView config — use persistent data store so localStorage survives app restarts
         let config = WKWebViewConfiguration()
+        config.websiteDataStore = WKWebsiteDataStore.default()
         config.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
 
         webView = WKWebView(frame: window.contentView!.bounds, configuration: config)

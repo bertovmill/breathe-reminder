@@ -57,8 +57,23 @@
             z-index: 9;
             pointer-events: none;
             opacity: 0;
-            transition: opacity 3s ease;
+            transition: opacity 3s ease, background 3s ease;
             background: radial-gradient(ellipse at 50% 45%, rgba(139, 92, 246, 0.06) 0%, rgba(99, 102, 241, 0.03) 40%, transparent 70%);
+        }
+
+        /* Serotonin glow — warm fullscreen wash that builds toward breath 10 */
+        .serotonin-glow {
+            position: fixed;
+            inset: 0;
+            z-index: 8;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 4s ease;
+            background: radial-gradient(ellipse at 50% 50%,
+                rgba(167, 139, 250, 0.12) 0%,
+                rgba(139, 92, 246, 0.08) 30%,
+                rgba(99, 102, 241, 0.04) 60%,
+                transparent 85%);
         }
 
         /* Ambient background */
@@ -454,14 +469,15 @@
             transform: translateY(-4px);
         }
 
-        /* Countdown timer */
+        /* Phase count-up timer */
         .phase-timer {
-            font-size: 14px;
-            font-weight: 300;
-            color: rgba(232, 232, 240, 0.2);
+            font-size: 28px;
+            font-weight: 200;
+            color: rgba(165, 180, 252, 0.35);
             letter-spacing: 2px;
-            min-height: 20px;
+            min-height: 36px;
             font-variant-numeric: tabular-nums;
+            transition: opacity 0.4s ease;
         }
 
         /* Counter */
@@ -657,6 +673,20 @@
             display: none !important;
         }
 
+        /* Total breaths */
+        .total-breaths {
+            margin-top: 4px;
+            font-size: 13px;
+            font-weight: 400;
+            color: rgba(232, 232, 240, 0.2);
+            letter-spacing: 0.5px;
+        }
+
+        .total-breaths span {
+            color: rgba(165, 180, 252, 0.4);
+            font-weight: 500;
+        }
+
         /* Time display */
         .time-display {
             position: fixed;
@@ -673,6 +703,7 @@
 <body>
     <div class="grain" id="grain"></div>
     <div class="light-wash" id="lightWash"></div>
+    <div class="serotonin-glow" id="serotoninGlow"></div>
     <div class="ambient"></div>
     <div class="stars" id="stars"></div>
     <div class="particles" id="particles"></div>
@@ -687,6 +718,7 @@
                 <div class="streak-number" id="streakNumber">0</div>
                 <div class="streak-label">day streak</div>
                 <div class="streak-week" id="streakWeek"></div>
+                <div class="total-breaths"><span id="totalBreathsWelcome">0</span> mindful breaths</div>
             </div>
             <button class="start-btn" id="startBtn">
                 <span>Begin</span>
@@ -722,6 +754,7 @@
             <div class="complete-streak" id="completeStreak">
                 <div class="complete-streak-number" id="completeStreakNumber">0</div>
                 <div class="complete-streak-label">day streak</div>
+                <div class="total-breaths"><span id="totalBreathsComplete">0</span> total mindful breaths</div>
             </div>
             <button class="close-btn" id="closeBtn">Close</button>
         </div>
@@ -743,7 +776,7 @@
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (raw) return JSON.parse(raw);
             } catch (e) {}
-            return { completedDays: [] };
+            return { completedDays: [], totalBreaths: 0 };
         }
 
         function saveData(data) {
@@ -839,6 +872,19 @@
             });
         }
 
+        function addBreaths(count) {
+            const data = loadData();
+            data.totalBreaths = (data.totalBreaths || 0) + count;
+            saveData(data);
+        }
+
+        function renderTotalBreaths() {
+            const data = loadData();
+            const total = data.totalBreaths || 0;
+            document.getElementById('totalBreathsWelcome').textContent = total;
+            document.getElementById('totalBreathsComplete').textContent = total;
+        }
+
         function updateCheckButton() {
             const btn = document.getElementById('checkBtn');
             const icon = document.getElementById('checkIcon');
@@ -911,10 +957,30 @@
         const lightWash = document.getElementById('lightWash');
 
         function updateGrain(breathIndex) {
-            // Grain builds from 0 to ~0.35 opacity over 10 breaths
+            // Exponential curve so the last few breaths really flood the screen
             const progress = breathIndex / 10;
-            grain.style.opacity = progress * 0.35;
-            lightWash.style.opacity = progress * 0.8;
+            const eased = progress * progress; // accelerates toward the end
+
+            // Grain: subtle early, rich film texture by breath 10
+            grain.style.opacity = eased * 0.55;
+
+            // Light wash: grows and shifts warmer
+            lightWash.style.opacity = eased * 1.0;
+            const warmth = Math.floor(progress * 40); // shift purple toward warm
+            lightWash.style.background = `radial-gradient(ellipse at 50% 45%,
+                rgba(${139 + warmth}, ${92 + warmth * 0.5}, 246, ${0.06 + eased * 0.18}) 0%,
+                rgba(${99 + warmth}, ${102 + warmth * 0.3}, 241, ${0.03 + eased * 0.1}) 40%,
+                transparent 70%)`;
+
+            // Serotonin glow: fullscreen warm bloom that fills by the end
+            const glow = document.getElementById('serotoninGlow');
+            glow.style.opacity = eased * 0.9;
+            glow.style.background = `radial-gradient(ellipse at 50% 50%,
+                rgba(${167 + warmth}, ${139 + warmth * 0.6}, 250, ${eased * 0.25}) 0%,
+                rgba(${139 + warmth}, ${92 + warmth * 0.5}, 246, ${eased * 0.18}) 30%,
+                rgba(${99 + warmth}, ${102 + warmth * 0.3}, 241, ${eased * 0.1}) 60%,
+                rgba(${80 + warmth}, ${80 + warmth * 0.3}, 200, ${eased * 0.04}) 85%,
+                transparent 100%)`;
         }
 
         // ── Breathing ─────────────────────────────────────────
@@ -945,14 +1011,16 @@
             glowPulse.classList.toggle('active', phase === 'hold');
         }
 
-        function startPhaseTimer(durationMs) {
+        function startPhaseTimer(durationMs, direction) {
             clearInterval(phaseInterval);
-            let remaining = Math.ceil(durationMs / 1000);
-            phaseTimer.textContent = remaining;
+            const total = Math.ceil(durationMs / 1000);
+            let count = direction === 'down' ? total : 1;
+            phaseTimer.textContent = count;
             phaseInterval = setInterval(() => {
-                remaining--;
-                if (remaining > 0) {
-                    phaseTimer.textContent = remaining;
+                count += direction === 'down' ? -1 : 1;
+                const done = direction === 'down' ? count < 1 : count > total;
+                if (!done) {
+                    phaseTimer.textContent = count;
                 } else {
                     phaseTimer.textContent = '';
                     clearInterval(phaseInterval);
@@ -990,19 +1058,19 @@
             // Inhale
             setInstruction('Breathe in');
             setPhase('inhale');
-            startPhaseTimer(INHALE_MS);
+            startPhaseTimer(INHALE_MS, 'up');
 
             setTimeout(() => {
                 // Hold
                 setInstruction('Hold');
                 setPhase('hold');
-                startPhaseTimer(HOLD_MS);
+                startPhaseTimer(HOLD_MS, 'up');
 
                 setTimeout(() => {
                     // Exhale
                     setInstruction('Breathe out');
                     setPhase('exhale');
-                    startPhaseTimer(EXHALE_MS);
+                    startPhaseTimer(EXHALE_MS, 'down');
 
                     setTimeout(() => {
                         phaseTimer.textContent = '';
@@ -1019,10 +1087,12 @@
         function finishSession() {
             clearInterval(phaseInterval);
             updateGrain(TOTAL_BREATHS);
+            addBreaths(TOTAL_BREATHS);
             breathingScreen.classList.remove('active');
             completeScreen.classList.add('active');
             updateCheckButton();
             renderStreak();
+            renderTotalBreaths();
         }
 
         // ── Events ────────────────────────────────────────────
@@ -1056,6 +1126,7 @@
 
         // ── Init ──────────────────────────────────────────────
         renderStreak();
+        renderTotalBreaths();
         updateCheckButton();
     </script>
 </body>
