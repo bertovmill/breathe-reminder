@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breathe — 10 breaths to reset your evening</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🫁</text></svg>">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a1a;
+            color: #e8e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Ambient background */
+        .bg-glow {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .bg-glow::before {
+            content: '';
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: drift 12s ease-in-out infinite;
+        }
+
+        .bg-glow::after {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%);
+            top: 60%;
+            left: 40%;
+            transform: translate(-50%, -50%);
+            animation: drift 16s ease-in-out infinite reverse;
+        }
+
+        @keyframes drift {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.15); }
+        }
+
+        /* Stars */
+        .stars {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            animation: twinkle var(--d) ease-in-out infinite;
+            animation-delay: var(--del);
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Layout */
+        .page {
+            position: relative;
+            z-index: 1;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 80px 24px 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Hero */
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border-radius: 40px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            font-size: 13px;
+            font-weight: 400;
+            color: rgba(165, 180, 252, 0.7);
+            letter-spacing: 0.5px;
+            margin-bottom: 32px;
+        }
+
+        .hero-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(139, 92, 246, 0.6);
+            animation: pulse-dot 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; box-shadow: 0 0 8px rgba(139, 92, 246, 0.4); }
+        }
+
+        h1 {
+            font-size: clamp(42px, 8vw, 64px);
+            font-weight: 200;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #e8e8f0 0%, #a5b4fc 50%, #c4b5fd 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 19px;
+            font-weight: 300;
+            color: rgba(232, 232, 240, 0.45);
+            line-height: 1.7;
+            max-width: 480px;
+            margin-bottom: 48px;
+        }
+
+        /* Breathing animation preview */
+        .preview {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin-bottom: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.6), rgba(99, 102, 241, 0.3));
+            box-shadow: 0 0 60px rgba(99, 102, 241, 0.15);
+            animation: breathe-preview 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        .preview-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            animation: breathe-ring 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        .preview-ring:nth-child(2) { animation-delay: 0.1s; }
+        .preview-ring:nth-child(3) { animation-delay: 0.2s; }
+
+        @keyframes breathe-preview {
+            0%, 100% { width: 80px; height: 80px; box-shadow: 0 0 60px rgba(99, 102, 241, 0.15); }
+            35% { width: 140px; height: 140px; box-shadow: 0 0 120px rgba(99, 102, 241, 0.25); }
+            55% { width: 140px; height: 140px; }
+            90% { width: 80px; height: 80px; }
+        }
+
+        @keyframes breathe-ring {
+            0%, 100% { width: 90px; height: 90px; opacity: 0; }
+            35% { width: 165px; height: 165px; opacity: 1; }
+            55% { width: 165px; height: 165px; opacity: 1; }
+            90% { width: 90px; height: 90px; opacity: 0; }
+        }
+
+        /* Download button */
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 44px;
+            background: rgba(99, 102, 241, 0.18);
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            border-radius: 60px;
+            color: #c4b5fd;
+            font-family: inherit;
+            font-size: 17px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .download-btn:hover {
+            background: rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.55);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.2);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        .download-btn svg {
+            width: 20px;
+            height: 20px;
+            opacity: 0.8;
+        }
+
+        .platform-note {
+            margin-top: 14px;
+            font-size: 13px;
+            color: rgba(232, 232, 240, 0.2);
+            letter-spacing: 0.3px;
+        }
+
+        /* Features */
+        .features {
+            margin-top: 80px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 32px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .feature {
+            padding: 28px 24px;
+            border-radius: 16px;
+            background: rgba(99, 102, 241, 0.04);
+            border: 1px solid rgba(99, 102, 241, 0.08);
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+
+        .feature:hover {
+            background: rgba(99, 102, 241, 0.08);
+            border-color: rgba(99, 102, 241, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 14px;
+            display: block;
+        }
+
+        .feature h3 {
+            font-size: 15px;
+            font-weight: 500;
+            color: rgba(232, 232, 240, 0.75);
+            margin-bottom: 8px;
+        }
+
+        .feature p {
+            font-size: 14px;
+            font-weight: 300;
+            color: rgba(232, 232, 240, 0.3);
+            line-height: 1.6;
+        }
+
+        /* How it works */
+        .how-it-works {
+            margin-top: 80px;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .how-it-works h2 {
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            margin-bottom: 36px;
+            background: linear-gradient(135deg, #e8e8f0 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            text-align: left;
+        }
+
+        .step-number {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(165, 180, 252, 0.6);
+        }
+
+        .step-text h4 {
+            font-size: 15px;
+            font-weight: 500;
+            color: rgba(232, 232, 240, 0.7);
+            margin-bottom: 4px;
+        }
+
+        .step-text p {
+            font-size: 14px;
+            font-weight: 300;
+            color: rgba(232, 232, 240, 0.3);
+            line-height: 1.5;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 100px;
+            padding-top: 32px;
+            border-top: 1px solid rgba(99, 102, 241, 0.08);
+            width: 100%;
+        }
+
+        footer p {
+            font-size: 13px;
+            font-weight: 300;
+            color: rgba(232, 232, 240, 0.15);
+            letter-spacing: 0.3px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .page { padding: 60px 20px 40px; }
+            .features { grid-template-columns: 1fr; gap: 16px; }
+            .preview { width: 160px; height: 160px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="stars" id="stars"></div>
+
+    <div class="page">
+        <div class="hero-badge">
+            <span class="dot"></span>
+            Free &middot; macOS
+        </div>
+
+        <h1>10 breaths to reset your evening</h1>
+        <p class="subtitle">
+            A tiny app that reminds you to breathe every night at 9pm.
+            Three minutes of guided breathing to close your day with calm.
+        </p>
+
+        <div class="preview">
+            <div class="preview-ring"></div>
+            <div class="preview-ring"></div>
+            <div class="preview-ring"></div>
+            <div class="preview-circle"></div>
+        </div>
+
+        <a href="Breathe.app.zip" class="download-btn" id="downloadBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download for Mac
+        </a>
+        <p class="platform-note">macOS 12+ &middot; Apple Silicon & Intel</p>
+
+        <div class="features">
+            <div class="feature">
+                <span class="feature-icon">&#9711;</span>
+                <h3>Guided breathing</h3>
+                <p>5s inhale, 4s hold, 7s exhale. A rhythm proven to activate your parasympathetic nervous system.</p>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">&#10047;</span>
+                <h3>Serotonin glow</h3>
+                <p>As you breathe, the screen fills with a warm film grain bloom. Feel yourself filling up.</p>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">&#9734;</span>
+                <h3>Streak tracking</h3>
+                <p>Track your daily streak and total mindful breaths. Small consistency compounds into real change.</p>
+            </div>
+        </div>
+
+        <div class="how-it-works">
+            <h2>How it works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-text">
+                        <h4>Download &amp; open</h4>
+                        <p>Unzip and drop Breathe into your Applications folder. If macOS says it's "damaged", open Terminal and run: <code style="background:rgba(99,102,241,0.12);padding:2px 8px;border-radius:6px;font-size:13px;color:rgba(165,180,252,0.7);">xattr -cr ~/Downloads/Breathe.app</code></p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-text">
+                        <h4>Set your reminder</h4>
+                        <p>Use the built-in cron schedule or set your own reminder for 9pm each night.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-text">
+                        <h4>Breathe</h4>
+                        <p>Follow the circle. 10 breaths. Mark it done. Close. That's it.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Built with care. No tracking. No accounts. Just breathing.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Stars
+        const stars = document.getElementById('stars');
+        for (let i = 0; i < 60; i++) {
+            const s = document.createElement('div');
+            s.className = 'star';
+            s.style.left = Math.random() * 100 + '%';
+            s.style.top = Math.random() * 100 + '%';
+            s.style.setProperty('--d', (4 + Math.random() * 6) + 's');
+            s.style.setProperty('--del', Math.random() * 8 + 's');
+            if (Math.random() > 0.75) {
+                s.style.width = '3px';
+                s.style.height = '3px';
+                s.style.background = 'rgba(165, 180, 252, 0.2)';
+            }
+            stars.appendChild(s);
+        }
+    </script>
+</body>
+</html>
